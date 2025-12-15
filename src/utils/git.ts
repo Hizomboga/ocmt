@@ -179,10 +179,11 @@ export async function detectVersionBump(
   to: string
 ): Promise<VersionBump | null> {
   try {
-    // Check if package.json was modified
+    // Check if package.json was modified (exact match for root package.json only)
     const changedFiles = await git(`diff --name-only ${from}..${to}`);
+    const changedFilesList = changedFiles.split("\n").map(f => f.trim()).filter(Boolean);
     
-    if (!changedFiles.includes("package.json")) {
+    if (!changedFilesList.includes("package.json")) {
       return null;
     }
 

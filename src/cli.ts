@@ -3,6 +3,7 @@
 import { Command } from "commander";
 import { commitCommand } from "./commands/commit";
 import { changelogCommand } from "./commands/changelog";
+import { releaseCommand } from "./commands/release";
 
 const program = new Command();
 
@@ -29,6 +30,20 @@ program
   .option("-t, --to <ref>", "Ending commit/tag reference", "HEAD")
   .action(async (options) => {
     await changelogCommand(options);
+  });
+
+// Release command - generate changelog and commit it
+program
+  .command("release")
+  .alias("rel")
+  .description("Generate changelog, commit, and optionally tag")
+  .option("-f, --from <ref>", "Starting commit/tag reference")
+  .option("-v, --version <version>", "Version for the release")
+  .option("-t, --tag", "Create a git tag for the release")
+  .option("-p, --push", "Push to remote after tagging")
+  .option("-y, --yes", "Skip confirmation prompts")
+  .action(async (options) => {
+    await releaseCommand(options);
   });
 
 // Also support --changelog / -cl as flags on the main command
