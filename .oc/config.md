@@ -24,6 +24,7 @@ Generate commit messages following the Conventional Commits specification.
 ## Rules
 
 1. Use lowercase for the type
+1.5. Keep the commit message short and 1-2 lines. 
 2. No scope (e.g., use `feat:` not `feat(api):`)
 3. Use imperative mood in description ("add" not "added")
 4. Keep the first line under 72 characters

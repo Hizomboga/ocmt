@@ -8,4 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Integrated opencode-ai for automated commit messages and changelog generation (8e9deec)
+- Initial project skeleton with README and package configuration (6919578)
+- Changelog generation functionality (3e95f10)
+- Dist-based CLI build system (3e95f10)
+- OpenCode AI integration for commit messages and changelog generation (8e9deec)

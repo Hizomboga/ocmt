@@ -9,7 +9,12 @@ import {
   getLog,
   git,
 } from "../utils/git";
-import { generateChangelog } from "../lib/opencode";
+import { generateChangelog, updateChangelogFile } from "../lib/opencode";
+import {
+  hasCommitsSinceLastChangelog,
+  addHistoryEntry,
+  formatHistoryEntry,
+} from "../lib/history";
 
 export interface ChangelogOptions {
   from?: string;
@@ -33,36 +38,52 @@ async function changelogExists(): Promise<boolean> {
 }
 
 /**
- * Save changelog to CHANGELOG.md
- * If file exists, prepend new content after the header
+ * Get the changelog file path
  */
-async function saveChangelog(content: string): Promise<string> {
+async function getChangelogPath(): Promise<string> {
   const repoRoot = await getRepoRoot();
-  const changelogPath = join(repoRoot, "CHANGELOG.md");
+  return join(repoRoot, "CHANGELOG.md");
+}
+
+/**
+ * Save changelog to CHANGELOG.md
+ * If file exists, use AI to intelligently merge content
+ * If file doesn't exist, create new file with header
+ */
+async function saveChangelog(content: string, useAI: boolean = true): Promise<string> {
+  const changelogPath = await getChangelogPath();
 
   // Clean up the content - remove markdown code blocks if present
   let cleanContent = content
     .replace(/^```markdown\n?/i, "")
+    .replace(/^```\n?/, "")
     .replace(/\n?```$/i, "")
     .trim();
 
   if (existsSync(changelogPath)) {
-    // File exists - prepend new content
     const existing = readFileSync(changelogPath, "utf-8");
 
-    // Check if there's a main header (# Changelog)
-    const headerMatch = existing.match(/^#\s+Changelog\s*\n/i);
-
-    if (headerMatch) {
-      // Insert after header
-      const headerEnd = headerMatch.index! + headerMatch[0].length;
-      const before = existing.slice(0, headerEnd);
-      const after = existing.slice(headerEnd);
-      const newContent = `${before}\n${cleanContent}\n${after}`;
-      writeFileSync(changelogPath, newContent, "utf-8");
+    if (useAI) {
+      // Use AI to intelligently merge the changelog
+      const updatedContent = await updateChangelogFile({
+        newChangelog: cleanContent,
+        existingChangelog: existing,
+        changelogPath,
+      });
+      writeFileSync(changelogPath, updatedContent + "\n", "utf-8");
     } else {
-      // No header, prepend to file
-      writeFileSync(changelogPath, `${cleanContent}\n\n${existing}`, "utf-8");
+      // Fallback: simple prepend after header
+      const headerMatch = existing.match(/^#\s+Changelog\s*\n/i);
+
+      if (headerMatch) {
+        const headerEnd = headerMatch.index! + headerMatch[0].length;
+        const before = existing.slice(0, headerEnd);
+        const after = existing.slice(headerEnd);
+        const newContent = `${before}\n${cleanContent}\n${after}`;
+        writeFileSync(changelogPath, newContent, "utf-8");
+      } else {
+        writeFileSync(changelogPath, `${cleanContent}\n\n${existing}`, "utf-8");
+      }
     }
   } else {
     // Create new file with header
@@ -136,6 +157,9 @@ export async function changelogCommand(options: ChangelogOptions): Promise<void>
     const s = p.spinner();
     s.start("Fetching releases and commits");
 
+    // Check for commits since last changelog
+    const { hasCommits, lastEntry, commitCount } = await hasCommitsSinceLastChangelog();
+
     const releases = await getReleases();
     const recentLog = await getLog({ limit: 20 });
     const recentCommits = recentLog.split("\n").filter(Boolean);
@@ -146,6 +170,16 @@ export async function changelogCommand(options: ChangelogOptions): Promise<void>
     type SelectOption = { value: string; label: string; hint?: string };
     const selectOptions: SelectOption[] = [];
 
+    // Add "since last changelog" option if applicable
+    if (hasCommits && lastEntry) {
+      selectOptions.push({
+        value: `__last__:${lastEntry.toCommitHash}`,
+        label: color.green(`Since last changelog (${commitCount} new commits)`),
+        hint: formatHistoryEntry(lastEntry),
+      });
+    }
+
+    // Add releases
     if (releases.length > 0) {
       releases.slice(0, 10).forEach((tag) => {
         selectOptions.push({
@@ -156,6 +190,7 @@ export async function changelogCommand(options: ChangelogOptions): Promise<void>
       });
     }
 
+    // Add recent commits
     if (recentCommits.length > 0) {
       recentCommits.forEach((commitLine) => {
         const [hash, ...msg] = commitLine.split(" ");
@@ -181,7 +216,13 @@ export async function changelogCommand(options: ChangelogOptions): Promise<void>
       process.exit(0);
     }
 
-    fromRef = selectedRef as string;
+    // Handle "since last changelog" selection
+    const selectedValue = selectedRef as string;
+    if (selectedValue.startsWith("__last__:")) {
+      fromRef = selectedValue.replace("__last__:", "");
+    } else {
+      fromRef = selectedValue;
+    }
   }
 
   // Get commits between refs
@@ -247,12 +288,20 @@ export async function changelogCommand(options: ChangelogOptions): Promise<void>
           p.log.error(`Failed to copy: ${error.message}`);
         }
       } else if (action === "save") {
+        const saveSpinner = p.spinner();
+        const actionWord = changelogFileExists ? "Updating" : "Creating";
+        saveSpinner.start(`${actionWord} CHANGELOG.md`);
+
         try {
-          const filePath = await saveChangelog(changelog);
-          const actionWord = changelogFileExists ? "Updated" : "Created";
-          p.log.success(`${actionWord} ${color.cyan(filePath)}`);
+          const filePath = await saveChangelog(changelog, changelogFileExists);
+          const doneWord = changelogFileExists ? "Updated" : "Created";
+          saveSpinner.stop(`${doneWord} ${color.cyan(filePath)}`);
+
+          // Save to history after successful save
+          await addHistoryEntry(fromRef!, toRef, commits.length);
         } catch (error: any) {
-          p.log.error(`Failed to save: ${error.message}`);
+          saveSpinner.stop("Failed to save");
+          p.log.error(error.message);
         }
       }
 

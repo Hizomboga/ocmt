@@ -44,6 +44,12 @@ export interface ChangelogGenerationOptions {
   toRef: string;
 }
 
+export interface UpdateChangelogOptions {
+  newChangelog: string;
+  existingChangelog: string;
+  changelogPath: string;
+}
+
 /**
  * Check if opencode CLI is installed
  */
@@ -257,6 +263,82 @@ export async function generateChangelog(
   }
 
   return changelog.trim();
+}
+
+/**
+ * Update an existing CHANGELOG.md file intelligently using AI
+ * The AI will merge the new changelog content with existing content properly
+ */
+export async function updateChangelogFile(
+  options: UpdateChangelogOptions
+): Promise<string> {
+  const { newChangelog, existingChangelog, changelogPath } = options;
+
+  const client = await getClient();
+
+  // Create a session for this update
+  const session = await client.session.create({
+    body: { title: "oc-changelog-update" },
+  });
+
+  if (!session.data) {
+    throw new Error("Failed to create session");
+  }
+
+  const prompt = `You are updating a CHANGELOG.md file. Your task is to intelligently merge new changelog entries into the existing file.
+
+## Rules:
+1. Preserve the existing file structure and header
+2. Add the new changelog entry in the correct position (newest entries at the top, after the header)
+3. Do not duplicate entries - if similar entries exist, keep the most detailed version
+4. Maintain consistent formatting with the existing file
+5. Keep the "Keep a Changelog" format if that's what the file uses
+6. If there's an existing [Unreleased] section, merge into it or replace it with the new content
+7. Return ONLY the complete updated file content, no explanations
+
+## Existing CHANGELOG.md:
+\`\`\`markdown
+${existingChangelog}
+\`\`\`
+
+## New changelog entry to add:
+\`\`\`markdown
+${newChangelog}
+\`\`\`
+
+Return the complete updated CHANGELOG.md content:`;
+
+  // Send the prompt
+  const result = await client.session.prompt({
+    path: { id: session.data.id },
+    body: {
+      model: CHANGELOG_MODEL,
+      parts: [{ type: "text", text: prompt }],
+    },
+  });
+
+  if (!result.data) {
+    throw new Error("Failed to get AI response");
+  }
+
+  // Extract the updated changelog
+  let updatedChangelog = extractTextFromParts(result.data.parts || []);
+
+  // Clean up session
+  await client.session.delete({ path: { id: session.data.id } });
+
+  if (!updatedChangelog) {
+    throw new Error("No updated changelog generated");
+  }
+
+  // Clean up markdown code blocks if present
+  updatedChangelog = updatedChangelog
+    .replace(/^```markdown\n?/i, "")
+    .replace(/^```\n?/, "")
+    .replace(/\n?```$/, "")
+    .trim();
+
+  return updatedChangelog;
 }
 
 /**
