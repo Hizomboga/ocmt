@@ -216,6 +216,7 @@ export async function changelogCommand(options: ChangelogOptions): Promise<void>
 
     if (p.isCancel(selectedRef)) {
       p.cancel("Aborted");
+      cleanup();
       process.exit(0);
     }
 
@@ -238,6 +239,7 @@ export async function changelogCommand(options: ChangelogOptions): Promise<void>
 
     if (commits.length === 0) {
       p.outro(color.yellow("No commits found in the specified range"));
+      cleanup();
       process.exit(0);
     }
 
